@@ -385,17 +385,19 @@ const grades = ["8th Grade", "9th Grade", "10th Grade", "11th Grade", "12th Grad
 let currentAttempt = 0;
 let currentQuestionIndex = 0;
 const userAnswers = [];
-let timer; // Variable to hold the timer
-const TIME_PER_QUESTION = 20; // 20 seconds per question
+let timer;
+const TIME_PER_QUESTION = 5; // The timer is now 5 seconds
 
 const questionContainer = document.getElementById('question-container');
 const nextButton = document.getElementById('next-btn');
 const submitButton = document.getElementById('submit-btn');
 const resultsContainer = document.getElementById('results');
 const gradeTitle = document.getElementById('grade-title');
+const progressBar = document.getElementById('progress-bar');
+const totalQuestions = allQuestions["8th Grade"].length;
+const timerDisplay = document.getElementById('timer-display');
 const timeLeftSpan = document.getElementById('time-left');
 
-// Function to shuffle an array
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -412,7 +414,6 @@ function startTimer() {
         timeLeftSpan.textContent = timeLeft;
         if (timeLeft <= 0) {
             clearInterval(timer);
-            // Automatically move to the next question when time is up
             nextQuestion();
         }
     }, 1000);
@@ -422,14 +423,19 @@ function stopTimer() {
     clearInterval(timer);
 }
 
+function updateProgressBar() {
+    const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+    progressBar.style.width = `${progress}%`;
+}
+
 function triggerRipple(event, element) {
     const rect = element.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-    
+
     element.style.setProperty('--x', `${x}px`);
     element.style.setProperty('--y', `${y}px`);
-    
+
     element.classList.add('ripple-active');
 
     element.addEventListener('animationend', () => {
@@ -438,55 +444,106 @@ function triggerRipple(event, element) {
 }
 
 function renderQuestion() {
-    stopTimer(); // Stop any existing timer
+    stopTimer();
     const questions = allQuestions[grades[currentAttempt]];
     const q = questions[currentQuestionIndex];
-    questionContainer.innerHTML = '';
-    
+
     const questionDiv = document.createElement('div');
-    questionDiv.classList.add('question-card');
+    questionDiv.classList.add('question-card', 'fade-in-animation');
     questionDiv.innerHTML = `<div class="question"><p>${currentQuestionIndex + 1}. ${q.question}</p></div>`;
-    
+
     const optionsDiv = document.createElement('div');
     optionsDiv.classList.add('options');
-    
+
     q.options.forEach(option => {
         const label = document.createElement('label');
         const radioId = `q${currentQuestionIndex}-option-${option.replace(/\s/g, '-')}`;
         label.innerHTML = `<input type="radio" id="${radioId}" name="question" value="${option}"> <span>${option}</span>`;
         optionsDiv.appendChild(label);
-        
+
         label.addEventListener('click', (event) => {
+            stopTimer();
+
+            const allRadios = optionsDiv.querySelectorAll('input');
+            allRadios.forEach(radio => radio.disabled = true);
+
             triggerRipple(event, label);
+
             const selectedOption = label.querySelector('input');
+            const isCorrect = selectedOption.value === q.answer;
+
+            if (isCorrect) {
+                label.classList.add('correct');
+            } else {
+                label.classList.add('incorrect');
+                const correctAnswerLabel = optionsDiv.querySelector(`input[value="${q.answer}"]`).parentNode;
+                correctAnswerLabel.classList.add('correct');
+            }
+
             userAnswers[currentQuestionIndex] = selectedOption.value;
+
+            // Show the next question button after an answer is selected
+            if (currentQuestionIndex < questions.length - 1) {
+                nextButton.style.display = 'block';
+            } else {
+                nextButton.style.display = 'none';
+                submitButton.style.display = 'block';
+            }
+
+            timerDisplay.style.display = 'block';
+            startTimer();
         });
     });
-    
+
     questionDiv.appendChild(optionsDiv);
+    questionContainer.innerHTML = '';
     questionContainer.appendChild(questionDiv);
-    
-    if (currentQuestionIndex === questions.length - 1) {
-        nextButton.style.display = 'none';
-        submitButton.style.display = 'block';
+
+    updateProgressBar();
+    timerDisplay.style.display = 'none';
+    nextButton.style.display = 'none';
+    submitButton.style.display = 'none';
+}
+
+function nextQuestion() {
+    stopTimer();
+
+    const questions = allQuestions[grades[currentAttempt]];
+    const selectedAnswer = document.querySelector('input[name="question"]:checked');
+
+    if (selectedAnswer) {
+        userAnswers[currentQuestionIndex] = selectedAnswer.value;
     } else {
-        nextButton.style.display = 'block';
-        submitButton.style.display = 'none';
+        userAnswers[currentQuestionIndex] = null;
     }
-    
-    startTimer(); // Start the timer for the new question
+
+    const currentQuestionCard = questionContainer.querySelector('.question-card');
+    currentQuestionCard.classList.remove('fade-in-animation');
+    currentQuestionCard.classList.add('fade-out-animation');
+
+    currentQuestionCard.addEventListener('animationend', () => {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < questions.length) {
+            renderQuestion();
+        } else {
+            questionContainer.style.display = 'none';
+            nextButton.style.display = 'none';
+            submitButton.style.display = 'none';
+            showAllAnswers();
+        }
+    }, { once: true });
 }
 
 function showAllAnswers() {
-    stopTimer(); // Ensure timer is stopped
-    resultsContainer.innerHTML = '';
+    stopTimer();
+    questionContainer.style.display = 'none';
     const questions = allQuestions[grades[currentAttempt]];
     let score = 0;
-    
+
     questions.forEach((q, index) => {
         const resultItem = document.createElement('div');
-        resultItem.classList.add('question-card');
-        
+        resultItem.classList.add('question-card', 'fade-in-animation');
+
         const isCorrect = userAnswers[index] === q.answer;
         if (isCorrect) {
             score++;
@@ -494,14 +551,14 @@ function showAllAnswers() {
         } else {
             resultItem.classList.add('incorrect');
         }
-        
+
         let feedback = '';
         if (userAnswers[index]) {
             feedback = `<p>Your Answer: <strong>${userAnswers[index]}</strong></p>`;
         } else {
             feedback = `<p>You did not answer this question.</p>`;
         }
-        
+
         resultItem.innerHTML = `
             <div class="question">
                 <p>${index + 1}. ${q.question}</p>
@@ -515,7 +572,7 @@ function showAllAnswers() {
     const finalScore = document.createElement('h3');
     finalScore.textContent = `Final Score: ${score} out of ${questions.length}`;
     resultsContainer.prepend(finalScore);
-    
+
     const retakeButton = document.createElement('button');
     retakeButton.id = 'retake-btn';
     retakeButton.textContent = "Retake Test";
@@ -526,43 +583,21 @@ function showAllAnswers() {
     retakeButton.addEventListener('click', retakeTest);
 }
 
-function nextQuestion() {
-    stopTimer(); // Stop the timer when moving to the next question
-    const questions = allQuestions[grades[currentAttempt]];
-    const selectedAnswer = document.querySelector('input[name="question"]:checked');
-    
-    if (selectedAnswer) {
-        userAnswers[currentQuestionIndex] = selectedAnswer.value;
-    } else {
-        userAnswers[currentQuestionIndex] = null;
-    }
-    
-    currentQuestionIndex++;
-    if (currentQuestionIndex < questions.length) {
-        renderQuestion();
-    } else {
-        questionContainer.style.display = 'none';
-        nextButton.style.display = 'none';
-        showAllAnswers();
-    }
-}
-
 function retakeTest() {
     const nextGradeIndex = grades.indexOf(grades[currentAttempt]) + 1;
     if (nextGradeIndex < grades.length) {
         currentAttempt = nextGradeIndex;
         currentQuestionIndex = 0;
         userAnswers.length = 0;
-        
+
         gradeTitle.textContent = `${grades[currentAttempt]} Brain Teasers`;
-        
+
         resultsContainer.innerHTML = '';
         questionContainer.style.display = 'block';
         submitButton.style.display = 'none';
-        
-        // Shuffle the questions for the next grade
+
         allQuestions[grades[currentAttempt]] = shuffleArray(allQuestions[grades[currentAttempt]]);
-        
+
         renderQuestion();
     } else {
         alert("You have completed all the tests! Great job!");
@@ -573,7 +608,6 @@ function retakeTest() {
 nextButton.addEventListener('click', nextQuestion);
 submitButton.addEventListener('click', showAllAnswers);
 
-// Initial render with shuffled questions
 window.onload = () => {
     allQuestions[grades[currentAttempt]] = shuffleArray(allQuestions[grades[currentAttempt]]);
     renderQuestion();

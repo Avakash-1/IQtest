@@ -38,15 +38,20 @@ h1 {
     text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
 }
 
-#timer-display {
-    font-size: 1.2em;
-    font-weight: 600;
-    color: #512da8;
+#progress-container {
+    width: 100%;
+    height: 10px;
+    background-color: #e0eafc;
+    border-radius: 5px;
     margin-bottom: 20px;
+    overflow: hidden;
 }
 
-#time-left {
-    color: #dc3545;
+#progress-bar {
+    height: 100%;
+    width: 0%;
+    background-color: #512da8;
+    transition: width 0.3s ease-in-out;
 }
 
 .question-card {
@@ -56,6 +61,7 @@ h1 {
     padding: 25px;
     margin-bottom: 25px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    opacity: 1;
 }
 
 .question-card:hover {
@@ -185,6 +191,24 @@ button:hover {
     margin-top: 20px;
 }
 
+.fade-in-animation {
+    animation: fade-in 0.5s ease-out forwards;
+}
+
+.fade-out-animation {
+    animation: fade-out 0.5s ease-in forwards;
+}
+
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-out {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-20px); }
+}
+
 @media (max-width: 768px) {
     .quiz-container {
         padding: 20px;
@@ -205,3 +229,39 @@ button:hover {
         padding: 12px 25px;
     }
 }
+/* ... (previous CSS code) ... */
+
+/* Styles for correct and incorrect answer feedback */
+.options label.correct {
+    background: linear-gradient(135deg, #d4edda 0%, #a2d2a4 100%); /* Green gradient */
+    border-color: #28a745; /* Darker green border */
+    color: #155724; /* Darker text for contrast */
+    pointer-events: none; /* Disable clicking after selection */
+}
+
+.options label.incorrect {
+    background: linear-gradient(135deg, #f8d7da 0%, #f1a9a0 100%); /* Red gradient */
+    border-color: #dc3545; /* Darker red border */
+    color: #721c24; /* Darker text for contrast */
+    pointer-events: none; /* Disable clicking after selection */
+}
+
+/* Ensure selected radio button color matches feedback */
+.options label.correct input[type="radio"] {
+    accent-color: #28a745;
+}
+
+.options label.incorrect input[type="radio"] {
+    accent-color: #dc3545;
+}
+
+/* Disable hover effect on selected options */
+.options label.correct:hover,
+.options label.incorrect:hover {
+    background-color: inherit; /* Prevent hover from changing background */
+    transform: none; /* Prevent hover lift effect */
+    box-shadow: none; /* Remove hover shadow */
+}
+
+
+/* ... (rest of your CSS code) ... */

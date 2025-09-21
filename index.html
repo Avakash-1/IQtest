@@ -9,11 +9,14 @@
 <body>
     <div class="quiz-container">
         <h1 id="grade-title">8th Grade Brain Teasers</h1>
-        <div id="timer-display">Time Left: <span id="time-left">20</span>s</div>
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+        <div id="timer-display" style="display: none;">Time Left: <span id="time-left"></span>s</div>
         <div id="question-container">
-            </div>
+        </div>
         <div id="quiz-buttons">
-            <button id="next-btn">Next Question</button>
+            <button id="next-btn" style="display: none;">Next Question</button>
             <button id="submit-btn" style="display:none;">Submit Answers</button>
         </div>
         <div id="results"></div>
