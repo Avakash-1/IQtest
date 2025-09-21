@@ -272,7 +272,7 @@ const allQuestions = {
             answer: "In series, current is constant; in parallel, it is shared"
         },
         {
-            question: "Who wrote 'The Great Gatsby'?',",
+            question: "Who wrote 'The Great Gatsby'?",
             options: ["Ernest Hemingway", "F. Scott Fitzgerald", "William Faulkner", "Mark Twain"],
             answer: "F. Scott Fitzgerald"
         },
@@ -385,8 +385,8 @@ const grades = ["8th Grade", "9th Grade", "10th Grade", "11th Grade", "12th Grad
 let currentAttempt = 0;
 let currentQuestionIndex = 0;
 const userAnswers = [];
-let timer;
-const TIME_PER_QUESTION = 60; // 1 minute = 60 seconds
+let timer; // Variable to hold the timer
+const TIME_PER_QUESTION = 20; // 20 seconds per question
 
 const questionContainer = document.getElementById('question-container');
 const nextButton = document.getElementById('next-btn');
@@ -412,6 +412,7 @@ function startTimer() {
         timeLeftSpan.textContent = timeLeft;
         if (timeLeft <= 0) {
             clearInterval(timer);
+            // Automatically move to the next question when time is up
             nextQuestion();
         }
     }, 1000);
@@ -425,10 +426,10 @@ function triggerRipple(event, element) {
     const rect = element.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-
+    
     element.style.setProperty('--x', `${x}px`);
     element.style.setProperty('--y', `${y}px`);
-
+    
     element.classList.add('ripple-active');
 
     element.addEventListener('animationend', () => {
@@ -437,34 +438,34 @@ function triggerRipple(event, element) {
 }
 
 function renderQuestion() {
-    stopTimer();
+    stopTimer(); // Stop any existing timer
     const questions = allQuestions[grades[currentAttempt]];
     const q = questions[currentQuestionIndex];
     questionContainer.innerHTML = '';
-
+    
     const questionDiv = document.createElement('div');
     questionDiv.classList.add('question-card');
     questionDiv.innerHTML = `<div class="question"><p>${currentQuestionIndex + 1}. ${q.question}</p></div>`;
-
+    
     const optionsDiv = document.createElement('div');
     optionsDiv.classList.add('options');
-
+    
     q.options.forEach(option => {
         const label = document.createElement('label');
         const radioId = `q${currentQuestionIndex}-option-${option.replace(/\s/g, '-')}`;
         label.innerHTML = `<input type="radio" id="${radioId}" name="question" value="${option}"> <span>${option}</span>`;
         optionsDiv.appendChild(label);
-
+        
         label.addEventListener('click', (event) => {
             triggerRipple(event, label);
             const selectedOption = label.querySelector('input');
             userAnswers[currentQuestionIndex] = selectedOption.value;
         });
     });
-
+    
     questionDiv.appendChild(optionsDiv);
     questionContainer.appendChild(questionDiv);
-
+    
     if (currentQuestionIndex === questions.length - 1) {
         nextButton.style.display = 'none';
         submitButton.style.display = 'block';
@@ -473,19 +474,19 @@ function renderQuestion() {
         submitButton.style.display = 'none';
     }
     
-    startTimer();
+    startTimer(); // Start the timer for the new question
 }
 
 function showAllAnswers() {
-    stopTimer();
+    stopTimer(); // Ensure timer is stopped
     resultsContainer.innerHTML = '';
     const questions = allQuestions[grades[currentAttempt]];
     let score = 0;
-
+    
     questions.forEach((q, index) => {
         const resultItem = document.createElement('div');
         resultItem.classList.add('question-card');
-
+        
         const isCorrect = userAnswers[index] === q.answer;
         if (isCorrect) {
             score++;
@@ -493,14 +494,14 @@ function showAllAnswers() {
         } else {
             resultItem.classList.add('incorrect');
         }
-
+        
         let feedback = '';
         if (userAnswers[index]) {
             feedback = `<p>Your Answer: <strong>${userAnswers[index]}</strong></p>`;
         } else {
             feedback = `<p>You did not answer this question.</p>`;
         }
-
+        
         resultItem.innerHTML = `
             <div class="question">
                 <p>${index + 1}. ${q.question}</p>
@@ -514,7 +515,7 @@ function showAllAnswers() {
     const finalScore = document.createElement('h3');
     finalScore.textContent = `Final Score: ${score} out of ${questions.length}`;
     resultsContainer.prepend(finalScore);
-
+    
     const retakeButton = document.createElement('button');
     retakeButton.id = 'retake-btn';
     retakeButton.textContent = "Retake Test";
@@ -526,16 +527,16 @@ function showAllAnswers() {
 }
 
 function nextQuestion() {
-    stopTimer();
+    stopTimer(); // Stop the timer when moving to the next question
     const questions = allQuestions[grades[currentAttempt]];
     const selectedAnswer = document.querySelector('input[name="question"]:checked');
-
+    
     if (selectedAnswer) {
         userAnswers[currentQuestionIndex] = selectedAnswer.value;
     } else {
         userAnswers[currentQuestionIndex] = null;
     }
-
+    
     currentQuestionIndex++;
     if (currentQuestionIndex < questions.length) {
         renderQuestion();
@@ -552,15 +553,16 @@ function retakeTest() {
         currentAttempt = nextGradeIndex;
         currentQuestionIndex = 0;
         userAnswers.length = 0;
-
+        
         gradeTitle.textContent = `${grades[currentAttempt]} Brain Teasers`;
-
+        
         resultsContainer.innerHTML = '';
         questionContainer.style.display = 'block';
         submitButton.style.display = 'none';
-
+        
+        // Shuffle the questions for the next grade
         allQuestions[grades[currentAttempt]] = shuffleArray(allQuestions[grades[currentAttempt]]);
-
+        
         renderQuestion();
     } else {
         alert("You have completed all the tests! Great job!");
@@ -571,6 +573,7 @@ function retakeTest() {
 nextButton.addEventListener('click', nextQuestion);
 submitButton.addEventListener('click', showAllAnswers);
 
+// Initial render with shuffled questions
 window.onload = () => {
     allQuestions[grades[currentAttempt]] = shuffleArray(allQuestions[grades[currentAttempt]]);
     renderQuestion();
